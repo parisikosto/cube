@@ -7,13 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// timezoneCmd represents the timezone command
 var timezoneCmd = &cobra.Command{
 	Use:   "timezone",
-	Short: "Get the current time in a given timezone",
-	Long: `Get the current time in a given timezone.
-               This command takes one argument, the timezone you want to get the current time in.
-               It returns the current time in RFC1123 format.`,
+	Short: "Get the current date in a given timezone",
+	Long: `Displays the current date for the given timezone. Use the --date flag to customize the output format.
+
+Example:
+  cube timezone Europe/Athens
+  cube timezone America/New_York --date "2006-01-02 15:04:05"`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		timezone := args[0]
