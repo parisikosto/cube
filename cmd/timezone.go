@@ -15,14 +15,6 @@ var timezoneCmd = &cobra.Command{
                This command takes one argument, the timezone you want to get the current time in.
                It returns the current time in RFC1123 format.`,
 	Args: cobra.ExactArgs(1),
-	// Run: func(cmd *cobra.Command, args []string) {
-	// 	timezone := args[0]
-	// 	currentTime, err := getTimeInTimezone(timezone)
-	// 	if err != nil {
-	// 		log.Fatalln("The timezone string is invalid")
-	// 	}
-	// 	fmt.Println(currentTime)
-	// },
 	Run: func(cmd *cobra.Command, args []string) {
 		timezone := args[0]
 		location, _ := time.LoadLocation(timezone)
@@ -42,17 +34,3 @@ func init() {
 	rootCmd.AddCommand(timezoneCmd)
 	timezoneCmd.Flags().String("date", "", "Date for which to get the time (format: yyyy-mm-dd)")
 }
-
-// func init() {
-// 	rootCmd.AddCommand(timezoneCmd)
-
-// 	// Here you will define your flags and configuration settings.
-
-// 	// Cobra supports Persistent Flags which will work for this command
-// 	// and all subcommands, e.g.:
-// 	// timezoneCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-// 	// Cobra supports local flags which will only run when this command
-// 	// is called directly, e.g.:
-// 	// timezoneCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-// }

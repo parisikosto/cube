@@ -1,6 +1,6 @@
 package main
 
-import "cube/cmd"
+import "github.com/parisikosto/cube/cmd"
 
 func main() {
 	cmd.Execute()
