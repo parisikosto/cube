@@ -89,6 +89,20 @@ func AddUserToDockerGroup() (string, error) {
 	return user, err
 }
 
+// DockerHelloWorld runs the docker hello-world container to verify Docker is working.
+func DockerHelloWorld() error {
+	return runCmd("$ docker run hello-world", "docker", "run", "hello-world")
+}
+
+// UninstallDocker removes Docker CE and cleans up unused dependencies.
+func UninstallDocker() error {
+	if err := runCmdInteractive("$ sudo apt remove docker-ce", "sudo", "apt", "remove", "docker-ce"); err != nil {
+		return err
+	}
+
+	return runCmdInteractive("$ sudo apt autoremove", "sudo", "apt", "autoremove")
+}
+
 // InstallDocker runs the full Docker CE installation sequence.
 func InstallDocker() error {
 	if err := InstallDockerPrerequisites(); err != nil {
