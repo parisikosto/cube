@@ -61,7 +61,20 @@ func InstallDockerCE() error {
 
 // VerifyDockerRunning checks that the Docker service is active.
 func VerifyDockerRunning() error {
-	return runCmd("$ sudo systemctl status docker", "sudo", "systemctl", "status", "docker")
+	return runCmd("$ sudo systemctl status docker --no-pager", "sudo", "systemctl", "status", "docker", "--no-pager")
+}
+
+// CheckDockerGroup prints the groups of the current user to verify docker group membership.
+func CheckDockerGroup() error {
+	return runCmd("$ id -nG", "id", "-nG")
+}
+
+// AddUserToDockerGroup adds the current user to the docker group.
+func AddUserToDockerGroup() error {
+	return runShell(
+		"$ sudo usermod -aG docker ${USER}",
+		"sudo usermod -aG docker ${USER}",
+	)
 }
 
 // InstallDocker runs the full Docker CE installation sequence.
