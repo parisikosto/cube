@@ -11,3 +11,6 @@ var Time string
 
 // GitCommit is the git commit hash the binary was built from.
 var GitCommit string
+
+// TargetOS is the operating system the binary was built for.
+var TargetOS string

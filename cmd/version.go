@@ -21,6 +21,9 @@ var versionCmd = &cobra.Command{
 		if build.User != "" {
 			fmt.Printf("  by:      %s\n", build.User)
 		}
+		if build.TargetOS != "" {
+			fmt.Printf("  os:      %s\n", build.TargetOS)
+		}
 	},
 }
 

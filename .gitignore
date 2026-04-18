@@ -1,2 +1,12 @@
-cube
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/main
+/cube
 cube-linux-amd64
+
+# misc
+.DS_Store

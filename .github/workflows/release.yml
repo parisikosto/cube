@@ -30,7 +30,8 @@ jobs:
             -ldflags "-X github.com/parisikosto/cube/build.Version=${TAG_NAME} \
                       -X github.com/parisikosto/cube/build.User=${GITHUB_ACTOR} \
                       -X github.com/parisikosto/cube/build.Time=${BUILD_TIME} \
-                      -X github.com/parisikosto/cube/build.GitCommit=${GITHUB_SHA}" \
+                      -X github.com/parisikosto/cube/build.GitCommit=${GITHUB_SHA} \
+                      -X 'github.com/parisikosto/cube/build.TargetOS=Ubuntu 24.04.4 LTS (linux/amd64)'" \
             -o cube-linux-amd64 main.go
 
       - name: Create GitHub Release & Upload Asset
