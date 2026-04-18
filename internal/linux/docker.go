@@ -1,5 +1,10 @@
 package linux
 
+import (
+	"fmt"
+	"os"
+)
+
 // InstallDockerPrerequisites installs the packages required before adding the Docker repository.
 func InstallDockerPrerequisites() error {
 	if err := AptUpdate(); err != nil {
@@ -70,11 +75,18 @@ func CheckDockerGroup() error {
 }
 
 // AddUserToDockerGroup adds the current user to the docker group.
-func AddUserToDockerGroup() error {
-	return runShell(
-		"$ sudo usermod -aG docker ${USER}",
-		"sudo usermod -aG docker ${USER}",
+// Returns the username that was added.
+func AddUserToDockerGroup() (string, error) {
+	user := os.Getenv("USER")
+	if user == "" {
+		user = "${USER}"
+	}
+
+	err := runCmd(
+		fmt.Sprintf("$ sudo usermod -aG docker %s", user),
+		"sudo", "usermod", "-aG", "docker", user,
 	)
+	return user, err
 }
 
 // InstallDocker runs the full Docker CE installation sequence.

@@ -16,14 +16,15 @@ var dockerAddUserCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Adding user to docker group...")
 
-		if err := linux.AddUserToDockerGroup(); err != nil {
+		user, err := linux.AddUserToDockerGroup()
+		if err != nil {
 			ui.Error(fmt.Sprintf("Error adding user to docker group: %v", err))
 			os.Exit(1)
 		}
 
-		ui.Success("User added to docker group!")
-		ui.Instruction("Log out and back in for the change to take effect.")
-		ui.Instruction("Then verify with: " + ui.InlineCommand("$ docker run hello-world"))
+		ui.Success(fmt.Sprintf("User '%s' added to docker group!", user))
+		ui.Instruction("The change takes effect on your next login session.")
+		ui.Instruction("After your next login, verify with: " + ui.InlineCommand("$ docker run hello-world"))
 	},
 }
 
