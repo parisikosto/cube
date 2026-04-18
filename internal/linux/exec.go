@@ -25,3 +25,13 @@ func runCmdInteractive(label, name string, args ...string) error {
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
+
+// runShell executes a shell command string via bash -c.
+// Use for commands that require pipes, subshells, or redirects.
+func runShell(label, command string) error {
+	ui.Command(label)
+	cmd := exec.Command("bash", "-c", command)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
