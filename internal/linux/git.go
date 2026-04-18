@@ -27,3 +27,12 @@ func SetupGit(name, email string) error {
 func VerifyGitConfig() error {
 	return runCmd("$ git config --list", "git", "config", "--list")
 }
+
+// UninstallGit removes Git and its unused dependencies.
+func UninstallGit() error {
+	if err := runCmdInteractive("$ sudo apt remove git", "sudo", "apt", "remove", "git"); err != nil {
+		return err
+	}
+
+	return runCmdInteractive("$ sudo apt autoremove", "sudo", "apt", "autoremove")
+}
