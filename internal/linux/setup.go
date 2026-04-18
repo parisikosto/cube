@@ -84,8 +84,10 @@ func printNextSteps(username string) {
 	}
 
 	ui.SubCommand("\n─────────────────────────────────────")
-	ui.Instruction("Setup complete. Next steps:")
-	ui.Instruction("  Exit root session:   $ exit")
-	ui.Instruction(fmt.Sprintf("  Connect as new user: $ ssh %s@%s", username, ip))
-	ui.SubCommand("─────────────────────────────────────")
+	ui.Instruction("Setup complete. Next steps:\n")
+	ui.Instruction("  1. Exit root session:")
+	ui.Instruction("     " + ui.InlineCommand("$ exit") + "\n")
+	ui.Instruction("  2. Connect as new user:")
+	ui.Instruction("     " + ui.InlineCommand(fmt.Sprintf("$ ssh %s@%s", username, ip)))
+	ui.SubCommand("\n─────────────────────────────────────")
 }

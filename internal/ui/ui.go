@@ -53,3 +53,8 @@ func Instruction(text string) {
 func Styled(color, text string) string {
 	return color + text + colorReset
 }
+
+// InlineCommand returns a cyan-styled string for embedding a command inside an instruction line.
+func InlineCommand(text string) string {
+	return colorCyan + text + colorReset
+}
