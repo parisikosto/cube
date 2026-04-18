@@ -1,5 +1,7 @@
 package linux
 
+import "fmt"
+
 // InstallGit installs Git via apt.
 func InstallGit() error {
 	if err := AptUpdate(); err != nil {
@@ -26,6 +28,34 @@ func SetupGit(name, email string) error {
 // VerifyGitConfig prints the current git global configuration.
 func VerifyGitConfig() error {
 	return runCmd("$ git config --list", "git", "config", "--list")
+}
+
+// SetupGitInteractive prompts the user for a name and email, confirms, and configures Git globally.
+func SetupGitInteractive() error {
+	for {
+		name, err := PromptUsername()
+		if err != nil || name == "" {
+			return fmt.Errorf("no name provided")
+		}
+
+		email, err := PromptEmail()
+		if err != nil || email == "" {
+			return fmt.Errorf("no email provided")
+		}
+
+		printGitConfig(name, email)
+
+		if err := ConfirmPrompt("Is this correct"); err == nil {
+			if err := SetupGit(name, email); err != nil {
+				return err
+			}
+			return VerifyGitConfig()
+		}
+	}
+}
+
+func printGitConfig(name, email string) {
+	fmt.Printf("\n  name:  %s\n  email: %s\n\n", name, email)
 }
 
 // UninstallGit removes Git and its unused dependencies.
