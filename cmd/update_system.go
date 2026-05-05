@@ -13,7 +13,7 @@ var updateSystemCmd = &cobra.Command{
 	GroupID: "system",
 	Use:     "update-system",
 	Short:   "Update and upgrade all system packages",
-	Long:    `Runs apt update, apt upgrade -y, and apt autoremove -y to keep the system up to date.`,
+	Long:    `Runs apt update, apt upgrade -y, apt dist-upgrade -y, and apt autoremove -y to keep the system fully up to date.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Starting system update...")
 
