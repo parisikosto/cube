@@ -10,9 +10,10 @@ import (
 )
 
 var uninstallDockerCmd = &cobra.Command{
-	Use:   "uninstall-docker",
-	Short: "Uninstall Docker CE and remove unused dependencies",
-	Long:  `Removes Docker CE with apt remove and cleans up unused dependencies with apt autoremove.`,
+	GroupID: "docker",
+	Use:     "uninstall-docker",
+	Short:   "Uninstall Docker CE and remove unused dependencies",
+	Long:    `Removes Docker CE with apt remove and cleans up unused dependencies with apt autoremove.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := linux.ConfirmPrompt("Are you sure you want to uninstall Docker"); err != nil {
 			return

@@ -10,9 +10,10 @@ import (
 )
 
 var createUserCmd = &cobra.Command{
-	Use:   "create-user",
-	Short: "Create a new system user and grant sudo privileges",
-	Long:  `Runs adduser to create a new Linux user and usermod -aG sudo to grant admin privileges.`,
+	GroupID: "system",
+	Use:     "create-user",
+	Short:   "Create a new system user and grant sudo privileges",
+	Long:    `Runs adduser to create a new Linux user and usermod -aG sudo to grant admin privileges.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		username, err := linux.PromptUsername()
 		if err != nil || username == "" {

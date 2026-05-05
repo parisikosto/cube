@@ -10,9 +10,10 @@ import (
 )
 
 var uninstallGitCmd = &cobra.Command{
-	Use:   "uninstall-git",
-	Short: "Uninstall Git and remove unused dependencies",
-	Long:  `Removes Git with apt remove and cleans up unused dependencies with apt autoremove.`,
+	GroupID: "git",
+	Use:     "uninstall-git",
+	Short:   "Uninstall Git and remove unused dependencies",
+	Long:    `Removes Git with apt remove and cleans up unused dependencies with apt autoremove.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := linux.ConfirmPrompt("Are you sure you want to uninstall Git"); err != nil {
 			return

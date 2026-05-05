@@ -10,9 +10,10 @@ import (
 )
 
 var setupGitCmd = &cobra.Command{
-	Use:   "setup-git",
-	Short: "Configure global Git user name and email",
-	Long:  `Sets git config --global user.name and user.email, then prints the current git configuration.`,
+	GroupID: "git",
+	Use:     "setup-git",
+	Short:   "Configure global Git user name and email",
+	Long:    `Sets git config --global user.name and user.email, then prints the current git configuration.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Configuring Git...")
 

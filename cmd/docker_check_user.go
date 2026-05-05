@@ -10,9 +10,10 @@ import (
 )
 
 var dockerCheckUserCmd = &cobra.Command{
-	Use:   "docker-check-user",
-	Short: "Verify the current user is in the docker group",
-	Long:  `Prints the groups of the current user with id -nG. Run this after logging back in to confirm docker group membership.`,
+	GroupID: "docker",
+	Use:     "docker-check-user",
+	Short:   "Verify the current user is in the docker group",
+	Long:    `Prints the groups of the current user with id -nG. Run this after logging back in to confirm docker group membership.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Checking docker group membership...")
 

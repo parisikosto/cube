@@ -30,4 +30,13 @@ func Execute() {
 	}
 }
 
-func init() {}
+func init() {
+	rootCmd.AddGroup(
+		&cobra.Group{ID: "setup", Title: "Setup:"},
+		&cobra.Group{ID: "system", Title: "System:"},
+		&cobra.Group{ID: "git", Title: "Git:"},
+		&cobra.Group{ID: "docker", Title: "Docker:"},
+		&cobra.Group{ID: "tips", Title: "Tips:"},
+		&cobra.Group{ID: "info", Title: "Info:"},
+	)
+}

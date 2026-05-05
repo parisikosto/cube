@@ -10,8 +10,9 @@ import (
 )
 
 var setupGithubSSHCmd = &cobra.Command{
-	Use:   "setup-github-ssh",
-	Short: "Generate an SSH key pair for GitHub access",
+	GroupID: "git",
+	Use:     "setup-github-ssh",
+	Short:   "Generate an SSH key pair for GitHub access",
 	Long: `Generates an RSA 4096-bit SSH key pair for GitHub, prints the public key to add to your GitHub account,
 and provides instructions to activate the ssh-agent and test the connection with ssh -T git@github.com.`,
 	Run: func(cmd *cobra.Command, args []string) {

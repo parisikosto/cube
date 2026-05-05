@@ -10,9 +10,10 @@ import (
 )
 
 var setupFirewallCmd = &cobra.Command{
-	Use:   "setup-firewall",
-	Short: "Configure and enable the UFW firewall",
-	Long:  `Allows OpenSSH through the firewall, enables UFW, and displays the current firewall status.`,
+	GroupID: "system",
+	Use:     "setup-firewall",
+	Short:   "Configure and enable the UFW firewall",
+	Long:    `Allows OpenSSH through the firewall, enables UFW, and displays the current firewall status.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Checking registered firewall apps...")
 		if err := linux.ListFirewallApps(); err != nil {

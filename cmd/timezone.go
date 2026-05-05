@@ -8,8 +8,9 @@ import (
 )
 
 var timezoneCmd = &cobra.Command{
-	Use:   "timezone",
-	Short: "Get the current date in a given timezone",
+	GroupID: "info",
+	Use:     "timezone",
+	Short:   "Get the current date in a given timezone",
 	Long: `Displays the current date for the given timezone. Use the --date flag to customize the output format.
 
 Example:

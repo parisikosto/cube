@@ -10,9 +10,10 @@ import (
 )
 
 var dockerAddUserCmd = &cobra.Command{
-	Use:   "docker-add-user",
-	Short: "Add the current user to the docker group",
-	Long:  `Adds the current user to the docker group with usermod -aG docker. Log out and back in for the change to take effect.`,
+	GroupID: "docker",
+	Use:     "docker-add-user",
+	Short:   "Add the current user to the docker group",
+	Long:    `Adds the current user to the docker group with usermod -aG docker. Log out and back in for the change to take effect.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Adding user to docker group...")
 

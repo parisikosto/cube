@@ -10,9 +10,10 @@ import (
 )
 
 var installDockerCmd = &cobra.Command{
-	Use:   "install-docker",
-	Short: "Install Docker CE from the official Docker repository",
-	Long:  `Installs Docker CE by adding the official Docker GPG key and repository, then installs docker-ce and verifies the service is running.`,
+	GroupID: "docker",
+	Use:     "install-docker",
+	Short:   "Install Docker CE from the official Docker repository",
+	Long:    `Installs Docker CE by adding the official Docker GPG key and repository, then installs docker-ce and verifies the service is running.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Installing Docker CE...")
 

@@ -10,9 +10,10 @@ import (
 )
 
 var installGitCmd = &cobra.Command{
-	Use:   "install-git",
-	Short: "Install Git version control system",
-	Long:  `Installs Git via apt and verifies the installation by printing the installed version.`,
+	GroupID: "git",
+	Use:     "install-git",
+	Short:   "Install Git version control system",
+	Long:    `Installs Git via apt and verifies the installation by printing the installed version.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Installing Git...")
 

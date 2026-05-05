@@ -8,8 +8,9 @@ import (
 )
 
 var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print version information",
+	GroupID: "info",
+	Use:     "version",
+	Short:   "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("cube %s\n", build.Version)
 		if build.GitCommit != "" {
