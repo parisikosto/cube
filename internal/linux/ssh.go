@@ -3,6 +3,7 @@ package linux
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -123,8 +124,29 @@ func SelectSSHKey(keys []string) (string, error) {
 	return selected, nil
 }
 
+// startSSHAgent starts a new ssh-agent process, parses its socket path,
+// and sets SSH_AUTH_SOCK in the current process. Returns the socket path.
+func startSSHAgent() (string, error) {
+	out, err := exec.Command("ssh-agent", "-s").Output()
+	if err != nil {
+		return "", fmt.Errorf("could not start ssh-agent: %w", err)
+	}
+
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.HasPrefix(line, "SSH_AUTH_SOCK=") {
+			// line format: SSH_AUTH_SOCK=/tmp/ssh-.../agent.XXXXX; export SSH_AUTH_SOCK;
+			sockPath := strings.SplitN(line, "=", 2)[1]
+			sockPath = strings.SplitN(sockPath, ";", 2)[0]
+			os.Setenv("SSH_AUTH_SOCK", strings.TrimSpace(sockPath))
+			return sockPath, nil
+		}
+	}
+
+	return "", fmt.Errorf("could not parse ssh-agent output")
+}
+
 // RefreshSSHAgent auto-detects GitHub SSH keys, lets the user select one,
-// and runs ssh-add to load it into the running ssh-agent.
+// and loads it into the ssh-agent. Starts the agent automatically if needed.
 func RefreshSSHAgent() error {
 	keys, err := FindGithubSSHKeys()
 	if err != nil || len(keys) == 0 {
@@ -138,17 +160,35 @@ func RefreshSSHAgent() error {
 		return err
 	}
 
-	ui.Instruction(fmt.Sprintf("  Adding key: %s", keyPath))
+	ui.Instruction(fmt.Sprintf("  Key: %s", keyPath))
 
-	if err := runCmd("$ ssh-add "+keyPath, "ssh-add", keyPath); err != nil {
-		ui.Warning("Could not add key — ssh-agent may not be running.")
+	// Step 1: try ssh-add directly (works if agent is already running)
+	if err := runCmd("$ ssh-add "+keyPath, "ssh-add", keyPath); err == nil {
+		ui.Success("Key added to ssh-agent!")
+		ui.Instruction("Test the connection: " + ui.InlineCommand("$ ssh -T git@github.com"))
+		return nil
+	}
+
+	// Step 2: agent not running or socket stale — start a fresh one
+	ui.Warning("ssh-agent not available. Starting a new one...")
+	agentSock, err := startSSHAgent()
+	if err != nil {
 		ui.Instruction("Start the agent and add the key manually:")
 		ui.Instruction("  " + ui.InlineCommand(fmt.Sprintf(`$ eval "$(ssh-agent -s)" && ssh-add %s`, keyPath)))
 		return err
 	}
 
+	// Step 3: retry ssh-add with the new agent socket
+	if err := runCmd("$ ssh-add "+keyPath, "ssh-add", keyPath); err != nil {
+		ui.Instruction("Add the key manually:")
+		ui.Instruction("  " + ui.InlineCommand(fmt.Sprintf(`$ eval "$(ssh-agent -s)" && ssh-add %s`, keyPath)))
+		return err
+	}
+
 	ui.Success("Key added to ssh-agent!")
-	ui.Instruction("Test the connection with: " + ui.InlineCommand("$ ssh -T git@github.com"))
+	ui.Warning("A new agent was started. To use it in your current shell, run:")
+	ui.Instruction("  " + ui.InlineCommand(fmt.Sprintf("$ export SSH_AUTH_SOCK=%s", agentSock)))
+	ui.Instruction("Then test: " + ui.InlineCommand("$ ssh -T git@github.com"))
 
 	return nil
 }
