@@ -23,6 +23,27 @@ func LinuxTips() {
 	ui.Suggestion("  Test GitHub SSH:     " + ui.InlineCommand("$ ssh -T git@github.com"))
 }
 
+// DockerTips prints useful Docker command tips.
+func DockerTips() {
+	ui.SubCommand("\nContainers:")
+	ui.Suggestion("  List running:           " + ui.InlineCommand("$ docker ps"))
+	ui.Suggestion("  List all:               " + ui.InlineCommand("$ docker ps -a"))
+	ui.Suggestion("  Stop container:         " + ui.InlineCommand("$ docker stop <id>"))
+	ui.Suggestion("  Remove container:       " + ui.InlineCommand("$ docker rm <id>"))
+
+	ui.SubCommand("\nImages:")
+	ui.Suggestion("  List images:            " + ui.InlineCommand("$ docker images"))
+	ui.Suggestion("  Pull image:             " + ui.InlineCommand("$ docker pull <image>"))
+	ui.Suggestion("  Remove image:           " + ui.InlineCommand("$ docker rmi <image>"))
+
+	ui.SubCommand("\nPrune (use with caution):")
+	ui.Suggestion("  Prune system:           " + ui.InlineCommand("$ docker system prune"))
+	ui.Suggestion("  Prune containers:       " + ui.InlineCommand("$ docker container prune"))
+	ui.Suggestion("  Prune volumes:          " + ui.InlineCommand("$ docker volume prune"))
+	ui.Suggestion("  Prune networks:         " + ui.InlineCommand("$ docker network prune"))
+	ui.Suggestion("  Prune images:           " + ui.InlineCommand("$ docker image prune -a"))
+}
+
 // GitTips prints useful Git command tips.
 func GitTips() {
 	ui.SubCommand("Config:")
