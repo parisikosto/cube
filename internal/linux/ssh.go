@@ -2,8 +2,12 @@ package linux
 
 import (
 	"fmt"
+	"os"
 	"os/user"
+	"path/filepath"
+	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/parisikosto/cube/internal/ui"
 )
 
@@ -71,6 +75,80 @@ func SetupGithubSSH() error {
 	}
 
 	printGithubSSHInstructions(keyPath)
+
+	return nil
+}
+
+// FindGithubSSHKeys scans ~/.ssh/ for private keys matching the id_rsa_github_* naming convention.
+func FindGithubSSHKeys() ([]string, error) {
+	u, err := user.Current()
+	if err != nil {
+		return nil, fmt.Errorf("could not get current user: %w", err)
+	}
+
+	matches, err := filepath.Glob(u.HomeDir + "/.ssh/id_rsa_github_*")
+	if err != nil {
+		return nil, err
+	}
+
+	var keys []string
+	for _, f := range matches {
+		if !strings.HasSuffix(f, ".pub") {
+			if _, err := os.Stat(f + ".pub"); err == nil {
+				keys = append(keys, f)
+			}
+		}
+	}
+
+	return keys, nil
+}
+
+// SelectSSHKey prompts the user to select a key from a list.
+// If only one key exists, it is returned automatically.
+func SelectSSHKey(keys []string) (string, error) {
+	if len(keys) == 1 {
+		return keys[0], nil
+	}
+
+	prompt := promptui.Select{
+		Label: "Select SSH key to add",
+		Items: keys,
+	}
+
+	_, selected, err := prompt.Run()
+	if err != nil {
+		return "", fmt.Errorf("selection cancelled: %w", err)
+	}
+
+	return selected, nil
+}
+
+// RefreshSSHAgent auto-detects GitHub SSH keys, lets the user select one,
+// and runs ssh-add to load it into the running ssh-agent.
+func RefreshSSHAgent() error {
+	keys, err := FindGithubSSHKeys()
+	if err != nil || len(keys) == 0 {
+		ui.Warning("No GitHub SSH keys found in ~/.ssh/")
+		ui.Instruction("Generate one first with: " + ui.InlineCommand("$ cube setup-github-ssh"))
+		return fmt.Errorf("no keys found")
+	}
+
+	keyPath, err := SelectSSHKey(keys)
+	if err != nil {
+		return err
+	}
+
+	ui.Instruction(fmt.Sprintf("  Adding key: %s", keyPath))
+
+	if err := runCmd("$ ssh-add "+keyPath, "ssh-add", keyPath); err != nil {
+		ui.Warning("Could not add key — ssh-agent may not be running.")
+		ui.Instruction("Start the agent and add the key manually:")
+		ui.Instruction("  " + ui.InlineCommand(fmt.Sprintf(`$ eval "$(ssh-agent -s)" && ssh-add %s`, keyPath)))
+		return err
+	}
+
+	ui.Success("Key added to ssh-agent!")
+	ui.Instruction("Test the connection with: " + ui.InlineCommand("$ ssh -T git@github.com"))
 
 	return nil
 }
