@@ -6,7 +6,10 @@
 *.dylib
 /main
 /cube
+cube
+cube-darwin-amd64
 cube-linux-amd64
+cube-linux-arm
 
 # misc
 .DS_Store
