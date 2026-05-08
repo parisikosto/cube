@@ -12,6 +12,8 @@ import (
 	"github.com/parisikosto/cube/internal/ui"
 )
 
+const sshAgentAutoStartLine = `[ -z "$SSH_AUTH_SOCK" ] && eval "$(ssh-agent -s)" > /dev/null 2>&1`
+
 // ListSSHKeys prints the SSH keys in the current user's .ssh directory.
 func ListSSHKeys() error {
 	u, err := user.Current()
@@ -46,6 +48,74 @@ func PrintSSHPublicKey(keyPath string) error {
 	return runCmd("$ cat "+keyPath+".pub", "cat", keyPath+".pub")
 }
 
+// WriteSSHConfig writes an ~/.ssh/config Host block for github.com that sets
+// AddKeysToAgent yes so the key is loaded automatically on first use.
+// If a github.com entry already exists the file is left untouched.
+func WriteSSHConfig(keyPath string) error {
+	u, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("could not get current user: %w", err)
+	}
+
+	sshDir := filepath.Join(u.HomeDir, ".ssh")
+	if err := os.MkdirAll(sshDir, 0700); err != nil {
+		return fmt.Errorf("could not create ~/.ssh: %w", err)
+	}
+
+	configPath := filepath.Join(sshDir, "config")
+	content, _ := os.ReadFile(configPath)
+	if strings.Contains(string(content), "Host github.com") {
+		ui.Instruction("  ~/.ssh/config already has a github.com entry, skipping.")
+		return nil
+	}
+
+	block := fmt.Sprintf("\nHost github.com\n    AddKeysToAgent yes\n    IdentityFile %s\n", keyPath)
+
+	f, err := os.OpenFile(configPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		return fmt.Errorf("could not open ~/.ssh/config: %w", err)
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(block); err != nil {
+		return fmt.Errorf("could not write ~/.ssh/config: %w", err)
+	}
+
+	ui.Success("~/.ssh/config updated with AddKeysToAgent yes for github.com")
+	return nil
+}
+
+// WriteSSHAgentAutoStart appends a one-liner to ~/.bashrc that ensures
+// ssh-agent is running silently on every new login session.
+// If the line is already present the file is left untouched.
+func WriteSSHAgentAutoStart() error {
+	u, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("could not get current user: %w", err)
+	}
+
+	bashrc := filepath.Join(u.HomeDir, ".bashrc")
+	content, _ := os.ReadFile(bashrc)
+	if strings.Contains(string(content), sshAgentAutoStartLine) {
+		ui.Instruction("  ~/.bashrc already has ssh-agent auto-start, skipping.")
+		return nil
+	}
+
+	f, err := os.OpenFile(bashrc, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("could not open ~/.bashrc: %w", err)
+	}
+	defer f.Close()
+
+	line := "\n# ssh-agent auto-start (added by cube)\n" + sshAgentAutoStartLine + "\n"
+	if _, err := f.WriteString(line); err != nil {
+		return fmt.Errorf("could not write to ~/.bashrc: %w", err)
+	}
+
+	ui.Success("~/.bashrc configured: ssh-agent will start automatically on login")
+	return nil
+}
+
 // SetupGithubSSH runs the full GitHub SSH key setup flow:
 // lists existing keys, prompts for email, generates key pair, prints public key, and prints next steps.
 func SetupGithubSSH() error {
@@ -68,6 +138,16 @@ func SetupGithubSSH() error {
 	keyPath, err := GenerateSSHKeyForGithub(email)
 	if err != nil {
 		return fmt.Errorf("key generation failed: %w", err)
+	}
+
+	ui.SubCommand("> Configuring ~/.ssh/config...")
+	if err := WriteSSHConfig(keyPath); err != nil {
+		ui.Warning(fmt.Sprintf("Could not update ~/.ssh/config: %v", err))
+	}
+
+	ui.SubCommand("> Configuring ssh-agent auto-start in ~/.bashrc...")
+	if err := WriteSSHAgentAutoStart(); err != nil {
+		ui.Warning(fmt.Sprintf("Could not update ~/.bashrc: %v", err))
 	}
 
 	ui.SubCommand("> Your public key:")
@@ -145,8 +225,10 @@ func startSSHAgent() (string, error) {
 	return "", fmt.Errorf("could not parse ssh-agent output")
 }
 
-// RefreshSSHAgent auto-detects GitHub SSH keys, lets the user select one,
-// and loads it into the ssh-agent. Starts the agent automatically if needed.
+// RefreshSSHAgent is a session-level fallback that loads a GitHub SSH key into
+// a running ssh-agent. Useful when the agent died mid-session.
+// Under normal circumstances the agent is started automatically by ~/.bashrc
+// and the key is loaded on first use via AddKeysToAgent in ~/.ssh/config.
 func RefreshSSHAgent() error {
 	keys, err := FindGithubSSHKeys()
 	if err != nil || len(keys) == 0 {
@@ -162,35 +244,21 @@ func RefreshSSHAgent() error {
 
 	ui.Instruction(fmt.Sprintf("  Key: %s", keyPath))
 
-	// Step 1: try ssh-add directly (works if agent is already running)
+	// Try ssh-add directly — works if agent is alive in the current session.
 	if err := runCmd("$ ssh-add "+keyPath, "ssh-add", keyPath); err == nil {
 		ui.Success("Key added to ssh-agent!")
 		ui.Instruction("Test the connection: " + ui.InlineCommand("$ ssh -T git@github.com"))
 		return nil
 	}
 
-	// Step 2: agent not running or socket stale — start a fresh one
-	ui.Warning("ssh-agent not available. Starting a new one...")
-	agentSock, err := startSSHAgent()
-	if err != nil {
-		ui.Instruction("Start the agent and add the key manually:")
-		ui.Instruction("  " + ui.InlineCommand(fmt.Sprintf(`$ eval "$(ssh-agent -s)" && ssh-add %s`, keyPath)))
-		return err
-	}
-
-	// Step 3: retry ssh-add with the new agent socket
-	if err := runCmd("$ ssh-add "+keyPath, "ssh-add", keyPath); err != nil {
-		ui.Instruction("Add the key manually:")
-		ui.Instruction("  " + ui.InlineCommand(fmt.Sprintf(`$ eval "$(ssh-agent -s)" && ssh-add %s`, keyPath)))
-		return err
-	}
-
-	ui.Success("Key added to ssh-agent!")
-	ui.Warning("A new agent was started. To use it in your current shell, run:")
-	ui.Instruction("  " + ui.InlineCommand(fmt.Sprintf("$ export SSH_AUTH_SOCK=%s", agentSock)))
-	ui.Instruction("Then test: " + ui.InlineCommand("$ ssh -T git@github.com"))
-
-	return nil
+	// Agent is not running. A child process cannot export env vars to the
+	// parent shell, so the only reliable fix is to reload ~/.bashrc in the
+	// current shell session.
+	ui.Warning("ssh-agent is not running in this session.")
+	ui.Instruction("Restart the agent by reloading your shell config:")
+	ui.Instruction("  " + ui.InlineCommand("$ source ~/.bashrc"))
+	ui.Instruction("Or open a new terminal — the agent starts automatically on login.")
+	return fmt.Errorf("ssh-agent not available in current session")
 }
 
 func printGithubSSHInstructions(keyPath string) {
@@ -204,9 +272,10 @@ func printGithubSSHInstructions(keyPath string) {
 	ui.Instruction("  1. Go to GitHub → Settings → SSH and GPG keys → New SSH key")
 	ui.Instruction(fmt.Sprintf("     Title: <username>@%s", ip))
 	ui.Instruction("     Key:   paste the public key printed above\n")
-	ui.Instruction("  2. Activate the ssh-agent and add the key:")
-	ui.Instruction("     " + ui.InlineCommand(fmt.Sprintf(`$ eval "$(ssh-agent -s)" && ssh-add %s`, keyPath)) + "\n")
-	ui.Instruction("  3. Test the connection:")
+	ui.Instruction("  2. Reload your shell to start the ssh-agent:")
+	ui.Instruction("     " + ui.InlineCommand("$ source ~/.bashrc") + "\n")
+	ui.Instruction("  3. Test the connection (the key loads automatically on first use):")
 	ui.Instruction("     " + ui.InlineCommand("$ ssh -T git@github.com"))
+	ui.Instruction("\n  From now on, every new terminal starts the agent automatically.")
 	ui.SubCommand("\n─────────────────────────────────────")
 }

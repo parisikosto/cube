@@ -12,11 +12,17 @@ import (
 var refreshSSHAgentCmd = &cobra.Command{
 	GroupID: "git",
 	Use:     "refresh-ssh-agent",
-	Short:   "Add your GitHub SSH key to the running ssh-agent",
-	Long: `Scans ~/.ssh/ for GitHub SSH keys (id_rsa_github_*), lets you select one if multiple exist,
-and runs ssh-add to load it into the active ssh-agent session.
+	Short: "Re-add your GitHub SSH key to the agent in the current session",
+	Long: `Session-level fallback for when the ssh-agent has died mid-session.
 
-If the agent is not running, the ready-to-copy command is printed instead.`,
+Scans ~/.ssh/ for GitHub SSH keys (id_rsa_github_*), lets you select one if multiple exist,
+and runs ssh-add to load it into the active ssh-agent.
+
+Under normal circumstances this command is not needed: setup-github-ssh configures
+~/.bashrc to start the agent automatically on every login, and ~/.ssh/config loads
+the key on first use via AddKeysToAgent yes.
+
+If the agent is not running, source ~/.bashrc (or open a new terminal) instead.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.SubCommand("> Loading SSH key into agent...")
 
