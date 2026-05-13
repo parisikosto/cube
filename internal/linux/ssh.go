@@ -245,7 +245,8 @@ func RefreshSSHAgent() error {
 	ui.Instruction(fmt.Sprintf("  Key: %s", keyPath))
 
 	// Try ssh-add directly — works if agent is alive in the current session.
-	if err := runCmd("$ ssh-add "+keyPath, "ssh-add", keyPath); err == nil {
+	// Uses runCmdInteractive so the user can enter a passphrase if the key is protected.
+	if err := runCmdInteractive("$ ssh-add "+keyPath, "ssh-add", keyPath); err == nil {
 		ui.Success("Key added to ssh-agent!")
 		ui.Instruction("Test the connection: " + ui.InlineCommand("$ ssh -T git@github.com"))
 		return nil

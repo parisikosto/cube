@@ -95,20 +95,21 @@ func DockerHelloWorld() error {
 }
 
 // PruneDocker removes all unused Docker resources: system, containers, volumes, networks, and images.
+// Each command is run interactively so the user can confirm or decline each step individually.
 func PruneDocker() error {
-	if err := runCmd("$ docker system prune", "docker", "system", "prune"); err != nil {
+	if err := runCmdInteractive("$ docker system prune", "docker", "system", "prune"); err != nil {
 		return err
 	}
-	if err := runCmd("$ docker container prune", "docker", "container", "prune"); err != nil {
+	if err := runCmdInteractive("$ docker container prune", "docker", "container", "prune"); err != nil {
 		return err
 	}
-	if err := runCmd("$ docker volume prune", "docker", "volume", "prune"); err != nil {
+	if err := runCmdInteractive("$ docker volume prune", "docker", "volume", "prune"); err != nil {
 		return err
 	}
-	if err := runCmd("$ docker network prune", "docker", "network", "prune"); err != nil {
+	if err := runCmdInteractive("$ docker network prune", "docker", "network", "prune"); err != nil {
 		return err
 	}
-	return runCmd("$ docker image prune -a", "docker", "image", "prune", "-a")
+	return runCmdInteractive("$ docker image prune -a", "docker", "image", "prune", "-a")
 }
 
 // UninstallDocker removes Docker CE and cleans up unused dependencies.
